@@ -4,197 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plex Request System</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .hidden {
-            display: none;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        button {
-            margin: 5px;
-            padding: 5px 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="loginPage">
         <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
     </div>
 
     <div id="userPage" class="hidden">
         <h2>User Dashboard</h2>
         <p>Welcome, <span id="userWelcome"></span>!</p>
         <h3>Make a Request</h3>
-        <input type="text" id="requestInput" placeholder="Enter your request">
-        <button onclick="makeRequest()">Submit Request</button>
+        <form id="requestForm">
+            <input type="text" id="requestInput" placeholder="Enter your request" required>
+            <button type="submit">Submit Request</button>
+        </form>
         <h3>Your Requests</h3>
         <table id="userRequests">
-            <tr>
-                <th>Request</th>
-                <th>Status</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Request</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
         </table>
-        <button onclick="logout()">Logout</button>
+        <button id="logoutBtn">Logout</button>
     </div>
 
     <div id="adminPage" class="hidden">
         <h2>Admin Dashboard</h2>
         <h3>All Requests</h3>
         <table id="allRequests">
-            <tr>
-                <th>User</th>
-                <th>Request</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Request</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
         </table>
         <h3>All Users</h3>
         <ul id="userList"></ul>
-        <button onclick="logout()">Logout</button>
+        <button id="adminLogoutBtn">Logout</button>
     </div>
 
-    <script>
-        // Simulated user database
-        const users = [
-            { username: 'Ben', password: 'Ben', isAdmin: false },
-            { username: 'Eric', password: 'Eric', isAdmin: false },
-            { username: 'Admin', password: 'Gogi1998!', isAdmin: true }
-        ];
-
-        // Load requests from sessionStorage or initialize if not exist
-        let requests = JSON.parse(sessionStorage.getItem('requests')) || [];
-
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const user = users.find(u => u.username === username && u.password === password);
-            
-            if (user) {
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
-                document.getElementById('loginPage').classList.add('hidden');
-                if (user.isAdmin) {
-                    document.getElementById('adminPage').classList.remove('hidden');
-                    displayAllRequests();
-                    displayAllUsers();
-                } else {
-                    document.getElementById('userPage').classList.remove('hidden');
-                    document.getElementById('userWelcome').textContent = username;
-                    displayUserRequests(username);
-                }
-            } else {
-                alert('Invalid username or password');
-            }
-        }
-
-        function logout() {
-            sessionStorage.removeItem('currentUser');
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('userPage').classList.add('hidden');
-            document.getElementById('adminPage').classList.add('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        }
-
-        function makeRequest() {
-            const request = document.getElementById('requestInput').value;
-            const user = JSON.parse(sessionStorage.getItem('currentUser'));
-            if (user) {
-                requests.push({ user: user.username, request: request, status: 'Pending' });
-                sessionStorage.setItem('requests', JSON.stringify(requests));
-                displayUserRequests(user.username);
-                document.getElementById('requestInput').value = '';
-            } else {
-                alert('User not logged in');
-            }
-        }
-
-        function displayUserRequests(username) {
-            const table = document.getElementById('userRequests');
-            table.innerHTML = '<tr><th>Request</th><th>Status</th></tr>';
-            requests.filter(r => r.user === username).forEach(r => {
-                table.innerHTML += `<tr><td>${r.request}</td><td>${r.status}</td></tr>`;
-            });
-        }
-
-        function displayAllRequests() {
-            const table = document.getElementById('allRequests');
-            table.innerHTML = '<tr><th>User</th><th>Request</th><th>Status</th><th>Action</th></tr>';
-            requests.forEach((r, index) => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${r.user}</td>
-                        <td>${r.request}</td>
-                        <td>${r.status}</td>
-                        <td>
-                            <button onclick="updateStatus(${index}, 'Resolved')">Resolve</button>
-                            <button onclick="updateStatus(${index}, 'Cancelled')">Cancel</button>
-                            <button onclick="updateStatus(${index}, 'Ongoing')">Ongoing</button>
-                            <button onclick="removeRequest(${index})">Remove</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function displayAllUsers() {
-            const userList = document.getElementById('userList');
-            userList.innerHTML = '';
-            users.forEach(u => {
-                userList.innerHTML += `<li>${u.username} (${u.isAdmin ? 'Admin' : 'User'})</li>`;
-            });
-        }
-
-        function updateStatus(index, status) {
-            requests[index].status = status;
-            sessionStorage.setItem('requests', JSON.stringify(requests));
-            displayAllRequests();
-        }
-
-        function removeRequest(index) {
-            if (confirm('Are you sure you want to remove this request?')) {
-                requests.splice(index, 1);
-                sessionStorage.setItem('requests', JSON.stringify(requests));
-                displayAllRequests();
-            }
-        }
-
-        // Initialize the app
-        window.onload = function() {
-            const currentUser = sessionStorage.getItem('currentUser');
-            if (currentUser) {
-                const user = JSON.parse(currentUser);
-                if (user.isAdmin) {
-                    document.getElementById('adminPage').classList.remove('hidden');
-                    displayAllRequests();
-                    displayAllUsers();
-                } else {
-                    document.getElementById('userPage').classList.remove('hidden');
-                    document.getElementById('userWelcome').textContent = user.username;
-                    displayUserRequests(user.username);
-                }
-            } else {
-                document.getElementById('loginPage').classList.remove('hidden');
-            }
-        }
-    </script>
+    <script src="auth.js"></script>
+    <script src="requests.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
