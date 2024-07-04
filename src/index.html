@@ -1,17 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
+        function updateStatus(index, status) {
+            requests[index].status = status;
+            localStorage.setItem('requests', JSON.stringify(requests));
+            displayAllRequests();
+        }
+	
+	function displayAllRequests() {
+            const table = document.getElementById('allRequests');
+            table.innerHTML = '<tr><th>User</th><th>Request</th><th>Status</th><th>Action</th></tr>';
+            requests.forEach((r, index) => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${r.user}</td>
+                        <td>${r.request}</td>
+                        <td>${r.status}</td>
+                        <td>
+                            <button onclick="updateStatus(${index}, 'Resolved')">Resolve</button>
+                            <button onclick="updateStatus(${index}, 'Cancelled')">Cancel</button>
+                            <button onclick="updateStatus(${index}, 'Ongoing')">Ongoing</button>
+                            <button onclick="removeRequest(${index})">Remove</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <title>Examen</title>
-</head>
+        // ... (other functions remain the same) ...
 
-<body>
-  <main>
-    <h1>Mon nom est Gaël et voici mon examen. J’ai fait de mon mieux, j’en suis fier.</h1>
-  </main>
+        function removeRequest(index) {
+            if (confirm('Are you sure you want to remove this request?')) {
+                requests.splice(index, 1);
+                localStorage.setItem('requests', JSON.stringify(requests));
+                displayAllRequests();
+            }
+        }
+    </script>
 </body>
-
 </html>
